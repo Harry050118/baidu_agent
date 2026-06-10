@@ -105,6 +105,12 @@ tests/
 ├── test_memory_repository.py
 ├── test_graph_routing.py
 └── test_cli_flow.py
+
+config/
+└── default.yaml
+
+.env.example
+task2_main.py
 ```
 
 ## 5. 现有 RAG 兼容设计
@@ -163,7 +169,7 @@ class RetrievedGuideline(BaseModel):
     final_score: float
 ```
 
-标题字段可空，以兼容无 Markdown 标题或缺少层级元数据的文档。`chunk_id` 是检索块的稳定标识，默认由规范化后的 `source`、标题层级和块文本内容计算哈希生成，用于追踪、去重和测试；不得使用查询结果列表位置作为 ID。
+标题字段可空，以兼容无 Markdown 标题或缺少层级元数据的文档。`chunk_id` 是检索块的稳定标识，默认由规范化后的 `source`、标题层级和块文本内容计算哈希生成，用于追踪、去重和测试；不得使用查询结果列表位置作为 ID。若现有 RAG 返回结果中没有 `chunk_id`，由 `WritingKnowledgeBase` 负责兜底生成。
 
 ## 6. 状态、Checkpoint 与 Memory
 
@@ -376,7 +382,7 @@ return {
 }
 ```
 
-`json_repair_count` 表示当前工作流累计发生的 JSON Repair 次数，包括初次生成和每次 Content Revision 后的结构修复。达到单次 Skill 调用的修复上限时，Skill 返回失败结果或抛出可识别异常，由节点记录错误和 checkpoint；不得把未通过 Schema 校验的对象写入 `screenplay`。
+`json_repair_count` 表示当前工作流累计发生的 JSON Repair 次数，包括初次生成和每次 Content Revision 后的结构修复。达到单次 Skill 调用的修复上限时，Skill 抛出类型化异常，例如 `ScreenplayGenerationError` 或 `JsonRepairExhaustedError`。`ScreenplaySkillNode` 捕获异常，将结构化错误写入 `AgentState.errors`，并依赖 checkpoint 保留当前状态。Skill 不返回 failure result，也不得把未通过 Schema 校验的对象写入 `screenplay`。
 
 ## 10. Reviewer 与最佳版本
 
@@ -423,7 +429,22 @@ passed = (
 
 ## 11. 人工确认
 
-`HumanReviewNode` 通过 LangGraph `interrupt()` 暂停：
+`HumanReviewNode` 通过 LangGraph `interrupt()` 暂停。恢复输入使用明确的动作枚举：
+
+```python
+class HumanReviewAction(str, Enum):
+    APPROVE = "approve"
+    REVISE = "revise"
+    PAUSE = "pause"
+```
+
+| 动作 | 行为 |
+|---|---|
+| `approve` | 确认当前大纲并继续生成剧本 |
+| `revise` | 携带用户修改意见，返回 `StoryPlanningNode` |
+| `pause` | 不推进工作流，保留 checkpoint，等待稍后通过相同 `thread_id` 恢复 |
+
+流程如下：
 
 ```text
 生成 StoryPlan
