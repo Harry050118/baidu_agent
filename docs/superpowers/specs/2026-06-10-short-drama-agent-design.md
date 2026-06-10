@@ -131,8 +131,12 @@ class WritingKnowledgeBase:
         self,
         query: str,
         purpose: str,
+        candidate_k: int = 5,
+        top_k: int = 3,
     ) -> list[RetrievedGuideline]: ...
 ```
+
+`candidate_k` 和 `top_k` 显式透传给现有 `Retriever.query()`。节点可以按阶段覆盖参数，但默认值与当前 RAG 配置保持一致。`top_k` 不得大于 `candidate_k`。
 
 RAG 在三个阶段分别使用：
 
@@ -146,17 +150,20 @@ RAG 在三个阶段分别使用：
 
 ```python
 class RetrievedGuideline(BaseModel):
+    chunk_id: str
     purpose: str
     query: str
     text: str
     source: str
-    document_title: str
-    parent_header: str
-    current_header: str
+    document_title: str | None = None
+    parent_header: str | None = None
+    current_header: str | None = None
     vector_score: float
     title_score: float
     final_score: float
 ```
+
+标题字段可空，以兼容无 Markdown 标题或缺少层级元数据的文档。`chunk_id` 是检索块的稳定标识，默认由规范化后的 `source`、标题层级和块文本内容计算哈希生成，用于追踪、去重和测试；不得使用查询结果列表位置作为 ID。
 
 ## 6. 状态、Checkpoint 与 Memory
 
@@ -226,6 +233,19 @@ class ProjectSummary(BaseModel):
 
 长期 Memory 不承担工作流恢复，Checkpoint 也不自动转化为用户偏好。
 
+### Memory 写入时机
+
+Memory 写入必须发生在明确事件之后，不允许每个节点都隐式修改长期记忆：
+
+| 时机 | 写入内容 | 说明 |
+|---|---|---|
+| 创建新项目后 | 初始项目记录、`thread_id`、原始需求 | 用于历史列表和运行关联，不写入推断偏好 |
+| 用户在大纲确认阶段提交明确反馈后 | 用户明确表达的题材、风格、结局或制作约束偏好 | 仅保存可从用户反馈直接确认的偏好 |
+| 最终导出成功后 | `ProjectSummary`、最终分数和输出路径 | 只保存最佳版本摘要，不保存完整 checkpoint |
+| 用户显式要求更新偏好时 | 指定偏好字段 | 覆盖或合并时保留更新时间 |
+
+失败运行、自动审查意见和模型自行推断出的偏好不得直接写入长期 Memory。写入失败不应破坏已生成剧本；系统记录可恢复错误，并允许稍后重试。
+
 ## 7. 生成约束
 
 默认约束可通过 CLI 或用户需求覆盖：
@@ -258,7 +278,12 @@ ScreenplaySkill.generate(
     constraints,
     writing_guidelines,
     user_preferences,
-) -> Screenplay
+) -> ScreenplaySkillResult
+
+
+class ScreenplaySkillResult(BaseModel):
+    screenplay: Screenplay
+    json_repair_attempts: int
 ```
 
 核心 Schema：
@@ -337,6 +362,21 @@ LLM 生成原始 JSON
 ```
 
 JSON Repair 不消耗内容修订次数，且不得主动改变合法剧情内容。
+
+`ScreenplaySkill` 不直接访问或修改 `AgentState`。`ScreenplaySkillNode` 调用 Skill 后，将结果显式写回状态：
+
+```python
+result = screenplay_skill.generate(...)
+
+return {
+    "screenplay": result.screenplay.model_dump(),
+    "json_repair_count": (
+        state["json_repair_count"] + result.json_repair_attempts
+    ),
+}
+```
+
+`json_repair_count` 表示当前工作流累计发生的 JSON Repair 次数，包括初次生成和每次 Content Revision 后的结构修复。达到单次 Skill 调用的修复上限时，Skill 返回失败结果或抛出可识别异常，由节点记录错误和 checkpoint；不得把未通过 Schema 校验的对象写入 `screenplay`。
 
 ## 10. Reviewer 与最佳版本
 
@@ -481,3 +521,42 @@ output/projects/<project_id>/
 8. JSON、Markdown、审查报告和检索追踪均成功导出。
 9. 用户偏好和项目历史可跨运行读取。
 10. 现有任务一 RAG 测试和新 Agent 测试全部通过。
+
+## 16. 实现优先级与 MVP 范围
+
+实现按以下顺序推进。每一级必须保持现有 RAG 测试通过，并形成可运行增量。
+
+### P0：可运行 MVP
+
+目标是完整演示“RAG 辅助 + 结构化 Skill + Agent 工作流”的核心闭环：
+
+1. 扩展统一 LLM 接口，支持 DeepSeek 和可测试的 Fake LLM。
+2. 实现 `WritingKnowledgeBase`、`RetrievedGuideline`、稳定 `chunk_id` 和三阶段查询参数透传。
+3. 建立短剧创作方法知识库。
+4. 实现 Screenplay Pydantic Schema、JSON Repair 和 `ScreenplaySkillResult`。
+5. 实现基础 AgentState、需求解析、故事策划、剧本生成、审查、有限内容修订和导出节点。
+6. 实现 CLI `create`，在大纲阶段完成一次人工确认。
+7. 导出最佳剧本 JSON、Markdown、审查报告和检索追踪。
+8. 为 RAG 兼容、Schema、JSON Repair、Skill 和核心路由编写测试。
+
+P0 可以使用内存 checkpointer，长期 Memory 可使用最小 SQLite Repository；但接口必须与后续持久化设计一致。
+
+### P1：完整作业版本
+
+目标是补齐完整 Agent 框架能力：
+
+1. 使用 SQLite Checkpointer 支持 interrupt 后按 `thread_id` 恢复。
+2. 实现 CLI `resume` 和 `history`。
+3. 完成长短期 Memory 分离，以及规定事件上的 Memory 写入。
+4. 完善指数退避、结构化错误、失败恢复和降级执行。
+5. 补齐 Reviewer 各维度评分、最佳版本选择和修订上限行为。
+6. 完成图路由、Memory、interrupt 恢复和 CLI 端到端测试。
+
+### P2：增强项
+
+以下能力仅在 P0 和 P1 稳定后实现：
+
+- 查询改写、去重和更复杂的 RAG 重排。
+- 更丰富的项目历史检索和偏好合并策略。
+- 运行 tracing、成本统计和质量对比报告。
+- Web UI、多 Agent、多集连续剧和多媒体生成。
