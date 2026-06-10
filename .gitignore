@@ -5,3 +5,5 @@ __pycache__/
 .vscode/
 .idea/
 ~$*
+tasks/short_drama_agent/data/
+tasks/short_drama_agent/output/

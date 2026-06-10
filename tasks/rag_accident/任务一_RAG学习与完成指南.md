@@ -57,7 +57,7 @@ RAG 解决的主要问题包括：
 
 ## 3. 本项目的完整 RAG 流程
 
-当前项目的主流程位于 `task1_main.py`，可以分为九个步骤。
+当前项目的主流程位于 `mission1_main.py`，可以分为九个步骤。
 
 ```mermaid
 flowchart TD
@@ -429,7 +429,7 @@ Notebook 主流程后面的附录用于分析效果，不属于最基本的 RAG 
 ### 工程验收
 
 - API Key 存放在 `.env`，没有硬编码。
-- Notebook 与 `task1_main.py` 调用同一套真实模块。
+- Notebook 与 `mission1_main.py` 调用同一套真实模块。
 - Notebook 可以从头运行完成。
 - 核心 RAG 流程与可选分析附录清楚分离。
 
@@ -475,7 +475,7 @@ Notebook 主流程后面的附录用于分析效果，不属于最基本的 RAG 
 6. 理解如何将检索证据拼入 Prompt。
 7. 学会判断错误来自检索还是生成。
 8. 学会使用 Hit@3、Recall@5、MRR 和热图分析检索效果。
-9. 最后再阅读 `task1_main.py` 和 `src/rag/` 中的具体实现。
+9. 最后再阅读 `mission1_main.py` 和 `src/rag/` 中的具体实现。
 
 ---
 
@@ -493,7 +493,7 @@ Notebook 主流程后面的附录用于分析效果，不属于最基本的 RAG 
 - [ ] 阅读检索输出并判断是否命中正确章节。
 - [ ] 解释 Hit@3、Recall@5、MRR 和热图。
 - [ ] 在回答错误时按步骤定位问题。
-- [ ] 独立运行 `task1_main.py` 和 `rag_pipeline_demo.ipynb`。
+- [ ] 独立运行 `mission1_main.py` 和 `rag_pipeline_demo.ipynb`。
 - [ ] 清楚区分作业最低要求和当前项目的增强功能。
 
 如果你能够完成以上检查表，就不仅是“让代码运行成功”，而是真正理解并完成了任务一。

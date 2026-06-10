@@ -113,9 +113,9 @@ config/
 task2_main.py
 ```
 
-## 5. 现有 RAG 兼容设计
+## 5. Agent 独立 RAG 基线设计
 
-现有 `src/rag` 是任务一的稳定基础，必须保留其文件、接口和测试：
+Agent 目录内的 `src/rag` 是独立基础，后续实现必须保持其文件、接口和本目录回归测试稳定：
 
 ```python
 documents = DocumentLoader.load(path)
@@ -169,7 +169,7 @@ class RetrievedGuideline(BaseModel):
     final_score: float
 ```
 
-标题字段可空，以兼容无 Markdown 标题或缺少层级元数据的文档。`chunk_id` 是检索块的稳定标识，默认由规范化后的 `source`、标题层级和块文本内容计算哈希生成，用于追踪、去重和测试；不得使用查询结果列表位置作为 ID。若现有 RAG 返回结果中没有 `chunk_id`，由 `WritingKnowledgeBase` 负责兜底生成。
+标题字段可空，以兼容无 Markdown 标题或缺少层级元数据的文档。`chunk_id` 是检索块的稳定标识，默认由规范化后的 `source`、标题层级和块文本内容计算哈希生成，用于追踪、去重和测试；不得使用查询结果列表位置作为 ID。若 Agent 独立 RAG 返回结果中没有 `chunk_id`，由 `WritingKnowledgeBase` 负责兜底生成。
 
 ## 6. 状态、Checkpoint 与 Memory
 
@@ -516,7 +516,7 @@ output/projects/<project_id>/
 
 必须覆盖：
 
-- 现有 `src/rag` 接口与任务一测试不被破坏。
+- Agent 目录内的 `src/rag` 接口与基础 RAG 回归测试不被破坏。
 - `WritingKnowledgeBase` 复用索引，并保留检索来源和评分。
 - 三阶段检索结果可追踪。
 - JSON Repair 只修复结构问题，不执行内容修订。
@@ -533,7 +533,7 @@ output/projects/<project_id>/
 第一版完成时，应满足：
 
 1. 用户可通过 CLI 输入单集短剧需求。
-2. 系统在策划、写作和审查三个阶段使用现有 RAG 能力。
+2. 系统在策划、写作和审查三个阶段使用 Agent 自身的 RAG 能力。
 3. 大纲生成后工作流通过 interrupt 等待人工确认或修改。
 4. Screenplay Skill 返回通过 Pydantic 校验的结构化剧本。
 5. JSON Repair 与 Content Revision 拥有独立计数与职责。
@@ -541,11 +541,11 @@ output/projects/<project_id>/
 7. 有限内容修订结束后导出最佳版本。
 8. JSON、Markdown、审查报告和检索追踪均成功导出。
 9. 用户偏好和项目历史可跨运行读取。
-10. 现有任务一 RAG 测试和新 Agent 测试全部通过。
+10. Agent 目录内的基础 RAG 回归测试和新 Agent 测试全部通过。
 
 ## 16. 实现优先级与 MVP 范围
 
-实现按以下顺序推进。每一级必须保持现有 RAG 测试通过，并形成可运行增量。
+实现按以下顺序推进。每一级必须保持 Agent 基础 RAG 测试通过，并形成可运行增量。
 
 ### P0：可运行 MVP
 

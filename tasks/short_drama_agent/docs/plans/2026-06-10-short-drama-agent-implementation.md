@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build a CLI short-drama Agent that reuses the existing RAG pipeline, pauses for outline review, generates validated structured screenplays, reviews and revises content, persists memory, and exports the best result.
+**Goal:** Build a CLI short-drama Agent that extends its own independent RAG baseline, pauses for outline review, generates validated structured screenplays, reviews and revises content, persists memory, and exports the best result.
 
-**Architecture:** Keep the existing `src/rag` public API unchanged and add a `WritingKnowledgeBase` adapter. Use focused Pydantic models for contracts, a standalone `ScreenplaySkill` for structured generation and JSON repair, and a LangGraph workflow for orchestration, interrupt/resume, review routing, and export. Dependencies are injected so tests use fake LLM and embedding implementations without network access.
+**Architecture:** Keep the task-local `src/rag` public API stable and add a `WritingKnowledgeBase` adapter. Use focused Pydantic models for contracts, a standalone `ScreenplaySkill` for structured generation and JSON repair, and a LangGraph workflow for orchestration, interrupt/resume, review routing, and export. Dependencies are injected so tests use fake LLM and embedding implementations without network access.
 
 **Tech Stack:** Python 3.10+, Pydantic 2, LangGraph, PyYAML, OpenAI-compatible DeepSeek client, SQLite, unittest.
 
@@ -30,7 +30,7 @@
 **RAG adapter**
 
 - Create: `src/rag/schemas.py` - `RetrievedGuideline`.
-- Create: `src/rag/knowledge_base.py` - existing-RAG adapter, stable chunk IDs, query parameter validation.
+- Create: `src/rag/knowledge_base.py` - task-local RAG adapter, stable chunk IDs, query parameter validation.
 - Create: `src/rag/query_builder.py` - planning, writing, and review queries.
 - Modify: `src/rag/__init__.py` - export adapter types without breaking existing exports.
 
@@ -131,9 +131,9 @@ class LLM(Protocol):
 
 `DeepSeekLLM` must adapt this method to the existing `LLMClient.chat()` method.
 
-- [ ] **Step 5: Run tests and existing RAG regression suite**
+- [ ] **Step 5: Run tests and task-local RAG regression suite**
 
-Run: `python -m unittest tests.test_config_and_llm test_rag_enhancements -v`
+Run: `python -m unittest tests.test_config_and_llm tests.test_rag_baseline -v`
 
 Expected: all tests PASS.
 
@@ -182,7 +182,7 @@ Expected: FAIL because adapter modules do not exist.
 
 - [ ] **Step 3: Implement `RetrievedGuideline` and adapter**
 
-Use SHA-256 over normalized `source`, optional title hierarchy, and chunk text. `WritingKnowledgeBase` must generate the ID when the existing RAG result has none and call:
+Use SHA-256 over normalized `source`, optional title hierarchy, and chunk text. `WritingKnowledgeBase` must generate the ID when the task-local RAG result has none and call:
 
 ```python
 self.retriever.query(query, candidate_k=candidate_k, top_k=top_k)
@@ -205,9 +205,9 @@ def build_review_query(screenplay: dict) -> str:
     return f"{screenplay['genre']}短剧的结构、节奏、人物一致性与可拍性评价标准"
 ```
 
-- [ ] **Step 5: Run adapter and existing RAG tests**
+- [ ] **Step 5: Run adapter and task-local RAG tests**
 
-Run: `python -m unittest tests.test_writing_knowledge_base tests.test_existing_rag_compatibility test_rag_enhancements -v`
+Run: `python -m unittest tests.test_writing_knowledge_base tests.test_existing_rag_compatibility tests.test_rag_baseline -v`
 
 Expected: all tests PASS.
 
@@ -495,7 +495,7 @@ Each Markdown file must use clear `#`, `##`, and `###` headings so the existing 
 
 - [ ] **Step 5: Run export and RAG tests**
 
-Run: `python -m unittest tests.test_export tests.test_writing_knowledge_base test_rag_enhancements -v`
+Run: `python -m unittest tests.test_export tests.test_writing_knowledge_base tests.test_rag_baseline -v`
 
 Expected: all tests PASS.
 
@@ -687,7 +687,7 @@ Expected: all tests PASS with no network calls.
 
 - [ ] **Step 3: Run existing task-one regression tests**
 
-Run: `python -m unittest test_rag_enhancements.py -v`
+Run: `python -m unittest tests/test_rag_baseline.py -v`
 
 Expected: 3 tests PASS.
 
