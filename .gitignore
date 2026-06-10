@@ -7,3 +7,4 @@ __pycache__/
 ~$*
 tasks/short_drama_agent/data/
 tasks/short_drama_agent/output/
+.worktrees/
