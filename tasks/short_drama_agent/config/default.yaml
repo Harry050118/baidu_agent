@@ -1,0 +1,26 @@
+llm:
+  base_url: https://api.deepseek.com
+  model: deepseek-chat
+
+rag:
+  documents_path: rag_docs_short_drama
+  candidate_k: 5
+  top_k: 3
+
+generation:
+  target_duration_seconds: 240
+  min_duration_seconds: 180
+  max_duration_seconds: 300
+  target_scene_count: 4
+  min_scene_count: 3
+  max_scene_count: 6
+  max_json_repair_attempts: 2
+
+review:
+  max_content_revisions: 2
+  pass_score: 8.0
+
+storage:
+  checkpoint_db: data/checkpoints.sqlite
+  memory_db: data/memory.sqlite
+  output_dir: output/projects
