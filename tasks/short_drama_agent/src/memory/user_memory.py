@@ -17,7 +17,9 @@ class UserPreferences(BaseModel):
 
 class UserMemoryRepository:
     def __init__(self, db_path: str | Path):
-        self.db_path = str(db_path)
+        path = Path(db_path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        self.db_path = str(path)
         self._initialize()
 
     def _connect(self) -> sqlite3.Connection:

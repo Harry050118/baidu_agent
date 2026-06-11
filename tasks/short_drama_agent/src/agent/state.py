@@ -2,6 +2,7 @@ from typing import Any, TypedDict
 
 
 class AgentState(TypedDict, total=False):
+    project_id: str
     thread_id: str
     user_id: str
     user_request: str
