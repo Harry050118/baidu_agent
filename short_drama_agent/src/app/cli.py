@@ -18,6 +18,11 @@ def build_parser() -> argparse.ArgumentParser:
     resume.add_argument("--thread-id", required=True)
     resume.add_argument("--action", choices=["approve", "revise", "pause"])
     resume.add_argument("--feedback")
+    resume.add_argument("--preferred-genre", action="append")
+    resume.add_argument("--preferred-tone", action="append")
+    resume.add_argument("--preferred-ending", action="append")
+    resume.add_argument("--dialogue-style")
+    resume.add_argument("--production-constraint", action="append")
 
     history = subparsers.add_parser("history", help="查看用户项目历史")
     history.add_argument("--user-id", default="default")
@@ -47,10 +52,22 @@ def _dispatch(args: argparse.Namespace, app: Any) -> Any:
             constraints=constraints,
         )
     if args.command == "resume":
+        explicit_preferences = {
+            key: value
+            for key, value in {
+                "preferred_genres": args.preferred_genre,
+                "preferred_tones": args.preferred_tone,
+                "preferred_endings": args.preferred_ending,
+                "dialogue_style": args.dialogue_style,
+                "production_constraints": args.production_constraint,
+            }.items()
+            if value is not None
+        }
         return app.resume(
             thread_id=args.thread_id,
             action=args.action,
             feedback=args.feedback,
+            explicit_preferences=explicit_preferences or None,
         )
     return app.history(user_id=args.user_id)
 

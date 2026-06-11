@@ -47,6 +47,18 @@ python task2_main.py resume --thread-id <thread-id> --action revise --feedback "
 python task2_main.py resume --thread-id <thread-id> --action pause
 ```
 
+修订大纲时可以显式记录长期偏好；普通 `--feedback` 不会自动推断或写入偏好：
+
+```powershell
+python task2_main.py resume --thread-id <thread-id> --action revise `
+  --feedback "加强结尾反转" `
+  --preferred-genre "悬疑" `
+  --preferred-tone "紧张" `
+  --preferred-ending "反转" `
+  --dialogue-style "短句" `
+  --production-constraint "低成本"
+```
+
 查看用户项目历史：
 
 ```powershell
@@ -59,11 +71,15 @@ python task2_main.py history --user-id default
 - `data/memory.sqlite` 保存显式用户偏好和成功导出的项目摘要。
 - 创建项目不会推断用户偏好；只有明确的大纲反馈才会更新偏好。
 - 失败运行和模型自行推断的信息不会自动写入长期 Memory。
+- LLM 调用使用配置化指数退避；尝试次数耗尽后记录结构化错误并保留 checkpoint。
 
 ## RAG
 
 `src/rag/` 保留独立 RAG 基线的公共接口。`WritingKnowledgeBase` 在其上提供 Agent
 适配层，显式透传 `candidate_k` 和 `top_k`，并为检索块生成稳定 ID。
+
+LangGraph 在故事策划、剧本写作和质量审查前分别执行检索。检索失败或知识库为空时，
+系统记录可恢复错误并使用空指南降级继续；非 RAG 节点失败时记录不可恢复错误并停止。
 
 短剧写作知识位于 `rag_docs_short_drama/`，分别覆盖结构与节奏、人物与冲突、
 对白与场景写作、质量审查标准。

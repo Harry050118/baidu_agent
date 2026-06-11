@@ -4,8 +4,16 @@ llm:
 
 rag:
   documents_path: rag_docs_short_drama
+  embedding_model: paraphrase-multilingual-MiniLM-L12-v2
+  chunk_size: 500
+  chunk_overlap: 50
   candidate_k: 5
   top_k: 3
+
+retry:
+  max_attempts: 3
+  initial_delay_seconds: 1.0
+  backoff_multiplier: 2.0
 
 generation:
   target_duration_seconds: 240

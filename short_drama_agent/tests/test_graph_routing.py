@@ -1,6 +1,13 @@
 import unittest
 
-from src.agent.nodes import review_node, revise_node, screenplay_node
+from src.agent.nodes import (
+    planning_retrieval_node,
+    review_node,
+    review_retrieval_node,
+    revise_node,
+    screenplay_node,
+    writing_retrieval_node,
+)
 from src.agent.router import HumanReviewAction, route_after_human_review, route_after_review
 from src.evaluation.reviewer import build_review_report
 from src.skills.screenplay.repair import JsonRepairExhaustedError
@@ -49,6 +56,19 @@ class Reviewer:
         return self.report
 
 
+class Retriever:
+    def __init__(self, results=None, error=None):
+        self.results = results or []
+        self.error = error
+        self.calls = []
+
+    def __call__(self, query, purpose):
+        self.calls.append((query, purpose))
+        if self.error:
+            raise self.error
+        return self.results
+
+
 class AgentRoutingTests(unittest.TestCase):
     def test_screenplay_node_accumulates_skill_json_repairs(self):
         update = screenplay_node(base_state(json_repair_count=2), skill=SuccessfulSkill(repairs=1))
@@ -80,6 +100,37 @@ class AgentRoutingTests(unittest.TestCase):
     def test_revise_node_only_increments_content_revision_count(self):
         update = revise_node(base_state(content_revision_count=1))
         self.assertEqual(update, {"content_revision_count": 2})
+
+    def test_retrieval_nodes_store_stage_guidelines(self):
+        retriever = Retriever([{"chunk_id": "c1"}])
+        planning = planning_retrieval_node(base_state(), retriever=retriever)
+        writing = writing_retrieval_node(base_state(), retriever=retriever)
+        review = review_retrieval_node(
+            base_state(screenplay=valid_screenplay_dict()),
+            retriever=retriever,
+        )
+
+        self.assertEqual(planning["planning_guidelines"][0]["chunk_id"], "c1")
+        self.assertEqual(writing["writing_guidelines"][0]["chunk_id"], "c1")
+        self.assertEqual(review["review_guidelines"][0]["chunk_id"], "c1")
+        self.assertEqual([purpose for _, purpose in retriever.calls], ["planning", "writing", "review"])
+
+    def test_retrieval_failure_records_recoverable_error_and_degrades(self):
+        update = planning_retrieval_node(
+            base_state(),
+            retriever=Retriever(error=RuntimeError("offline")),
+        )
+
+        self.assertEqual(update["planning_guidelines"], [])
+        self.assertEqual(update["errors"][0]["node"], "planning_retrieval")
+        self.assertTrue(update["errors"][0]["recoverable"])
+
+    def test_empty_retrieval_records_recoverable_error_and_degrades(self):
+        update = planning_retrieval_node(base_state(), retriever=Retriever())
+
+        self.assertEqual(update["planning_guidelines"], [])
+        self.assertEqual(update["errors"][0]["error_type"], "EmptyKnowledgeBase")
+        self.assertTrue(update["errors"][0]["recoverable"])
 
 
 if __name__ == "__main__":

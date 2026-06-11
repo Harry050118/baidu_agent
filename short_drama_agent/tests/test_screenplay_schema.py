@@ -43,6 +43,15 @@ def valid_screenplay():
 
 
 class ScreenplaySchemaTests(unittest.TestCase):
+    def test_dialogue_accepts_common_speaker_alias(self):
+        payload = valid_screenplay().model_dump()
+        dialogue = payload["scenes"][0]["dialogues"][0]
+        dialogue["speaker"] = dialogue.pop("character")
+
+        screenplay = Screenplay.model_validate(payload)
+
+        self.assertEqual(screenplay.scenes[0].dialogues[0].character, "林夏")
+
     def test_scene_supports_visual_action_and_optional_shooting_note(self):
         scene = Scene(**valid_scene())
         self.assertEqual(scene.visual_action, "她推开门，看见桌上的录音笔。")

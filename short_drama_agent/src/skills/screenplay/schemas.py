@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import AliasChoices, BaseModel, Field
 
 
 class Character(BaseModel):
@@ -9,7 +9,7 @@ class Character(BaseModel):
 
 
 class Dialogue(BaseModel):
-    character: str
+    character: str = Field(validation_alias=AliasChoices("character", "speaker"))
     line: str
     emotion: str | None = None
 

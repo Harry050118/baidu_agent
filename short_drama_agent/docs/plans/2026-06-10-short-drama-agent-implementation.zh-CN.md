@@ -1,6 +1,6 @@
 # 短剧生成 Agent 实施计划
 
-> **供 Agent 执行者使用：** 必须使用子技能 `superpowers:subagent-driven-development`（推荐）或 `superpowers:executing-plans`，逐项执行本计划。步骤使用复选框（`- [ ]`）跟踪。
+> **供 Agent 执行者使用：** 必须使用子技能 `superpowers:subagent-driven-development`（推荐）或 `superpowers:executing-plans`，逐项执行本计划。步骤使用复选框（`- [x]`）跟踪。
 
 **目标：** 构建一个命令行短剧 Agent：扩展自身独立的 RAG 基线，在大纲审阅处暂停，生成经过校验的结构化剧本，审查并修订内容，持久化记忆，最后导出最佳结果。
 
@@ -69,7 +69,7 @@
 - 修改： `requirements.txt`
 - 测试： `tests/test_config_and_llm.py`
 
-- [ ] **步骤 1：编写失败的配置与 LLM 契约测试**
+- [x] **步骤 1：编写失败的配置与 LLM 契约测试**
 
 ```python
 import unittest
@@ -95,13 +95,13 @@ class ConfigAndLLMTests(unittest.TestCase):
         self.assertEqual(llm.generate([{"role": "user", "content": "hello"}]), "hello")
 ```
 
-- [ ] **步骤 2：运行测试并确认 RED**
+- [x] **步骤 2：运行测试并确认 RED**
 
 运行：`python -m unittest tests.test_config_and_llm -v`
 
 预期：失败，因为 `src.config` 和 `src.llm.base` 尚不存在。
 
-- [ ] **步骤 3：添加依赖与最小配置文件**
+- [x] **步骤 3：添加依赖与最小配置文件**
 
 向 `requirements.txt` 添加：
 
@@ -116,7 +116,7 @@ PyYAML>=6.0.0
 
 根据已批准设计创建 `config/default.yaml`，其中包含 RAG、生成、审查和 SQLite 路径的默认值。
 
-- [ ] **步骤 4：实现最小配置加载器与 LLM 协议**
+- [x] **步骤 4：实现最小配置加载器与 LLM 协议**
 
 ```python
 class LLM(Protocol):
@@ -131,13 +131,13 @@ class LLM(Protocol):
 
 `DeepSeekLLM` 必须将此方法适配到现有的 `LLMClient.chat()` 方法。
 
-- [ ] **步骤 5：运行测试与任务内 RAG 回归套件**
+- [x] **步骤 5：运行测试与任务内 RAG 回归套件**
 
 运行：`python -m unittest tests.test_config_and_llm tests.test_rag_baseline -v`
 
 预期：所有测试均通过。
 
-- [ ] **步骤 6：提交**
+- [x] **步骤 6：提交**
 
 ```powershell
 git add .env.example config/default.yaml requirements.txt src/config.py src/llm tests/test_config_and_llm.py
@@ -154,7 +154,7 @@ git commit -m "Add agent configuration and LLM contract"
 - 测试： `tests/test_existing_rag_compatibility.py`
 - 测试： `tests/test_writing_knowledge_base.py`
 
-- [ ] **步骤 1：编写失败的适配器测试**
+- [x] **步骤 1：编写失败的适配器测试**
 
 ```python
 class WritingKnowledgeBaseTests(unittest.TestCase):
@@ -174,13 +174,13 @@ class WritingKnowledgeBaseTests(unittest.TestCase):
             kb.search("q", "review", candidate_k=2, top_k=3)
 ```
 
-- [ ] **步骤 2：运行测试并确认 RED**
+- [x] **步骤 2：运行测试并确认 RED**
 
 运行：`python -m unittest tests.test_writing_knowledge_base -v`
 
 预期：失败，因为适配器模块尚不存在。
 
-- [ ] **步骤 3：实现 `RetrievedGuideline` 与适配器**
+- [x] **步骤 3：实现 `RetrievedGuideline` 与适配器**
 
 使用规范化后的 `source`、可选标题层级和 chunk 文本计算 SHA-256。当任务内 RAG 结果没有 ID 时，`WritingKnowledgeBase` 必须生成该 ID，并调用：
 
@@ -188,7 +188,7 @@ class WritingKnowledgeBaseTests(unittest.TestCase):
 self.retriever.query(query, candidate_k=candidate_k, top_k=top_k)
 ```
 
-- [ ] **步骤 4：添加查询构建器**
+- [x] **步骤 4：添加查询构建器**
 
 创建确定性函数：
 
@@ -205,13 +205,13 @@ def build_review_query(screenplay: dict) -> str:
     return f"{screenplay['genre']}短剧的结构、节奏、人物一致性与可拍性评价标准"
 ```
 
-- [ ] **步骤 5：运行适配器与任务内 RAG 测试**
+- [x] **步骤 5：运行适配器与任务内 RAG 测试**
 
 运行：`python -m unittest tests.test_writing_knowledge_base tests.test_existing_rag_compatibility tests.test_rag_baseline -v`
 
 预期：所有测试均通过。
 
-- [ ] **步骤 6：提交**
+- [x] **步骤 6：提交**
 
 ```powershell
 git add src/rag tests/test_existing_rag_compatibility.py tests/test_writing_knowledge_base.py
@@ -226,7 +226,7 @@ git commit -m "Add short drama writing knowledge adapter"
 - 新建： `src/skills/screenplay/schemas.py`
 - 测试： `tests/test_screenplay_schema.py`
 
-- [ ] **步骤 1：编写失败的 Schema 测试**
+- [x] **步骤 1：编写失败的 Schema 测试**
 
 ```python
 class ScreenplaySchemaTests(unittest.TestCase):
@@ -246,13 +246,13 @@ class ScreenplaySchemaTests(unittest.TestCase):
         self.assertTrue(any("角色" in error for error in errors))
 ```
 
-- [ ] **步骤 2：运行测试并确认 RED**
+- [x] **步骤 2：运行测试并确认 RED**
 
 运行：`python -m unittest tests.test_screenplay_schema -v`
 
 预期：失败，因为剧本 Schema 尚不存在。
 
-- [ ] **步骤 3：实现 Pydantic Schema 与校验**
+- [x] **步骤 3：实现 Pydantic Schema 与校验**
 
 实现 `Character`、`Dialogue`、`Scene`、`Screenplay`、`GenerationConstraints`，以及：
 
@@ -270,13 +270,13 @@ def validate_screenplay(
 
 校验时长、场景数量、说话角色引用、连续且唯一的 ID、开头钩子和反转。
 
-- [ ] **步骤 4：运行 Schema 测试**
+- [x] **步骤 4：运行 Schema 测试**
 
 运行：`python -m unittest tests.test_screenplay_schema -v`
 
 预期：所有测试均通过。
 
-- [ ] **步骤 5：提交**
+- [x] **步骤 5：提交**
 
 ```powershell
 git add src/skills tests/test_screenplay_schema.py
@@ -292,7 +292,7 @@ git commit -m "Add structured screenplay schemas"
 - 测试： `tests/test_json_repair.py`
 - 测试： `tests/test_screenplay_skill.py`
 
-- [ ] **步骤 1：编写失败的 JSON 修复测试**
+- [x] **步骤 1：编写失败的 JSON 修复测试**
 
 ```python
 class JsonRepairTests(unittest.TestCase):
@@ -307,13 +307,13 @@ class JsonRepairTests(unittest.TestCase):
             ScreenplaySkill(llm, max_json_repair_attempts=2).generate(**inputs())
 ```
 
-- [ ] **步骤 2：运行测试并确认 RED**
+- [x] **步骤 2：运行测试并确认 RED**
 
 运行：`python -m unittest tests.test_json_repair tests.test_screenplay_skill -v`
 
 预期：失败，因为 Skill 模块尚不存在。
 
-- [ ] **步骤 3：实现类型化错误与最小 JSON 提取**
+- [x] **步骤 3：实现类型化错误与最小 JSON 提取**
 
 实现：
 
@@ -332,17 +332,17 @@ class ScreenplaySkillResult(BaseModel):
 
 Skill 只返回成功结果。修复次数耗尽时必须抛出 `JsonRepairExhaustedError`。
 
-- [ ] **步骤 4：实现生成与修复 Prompt**
+- [x] **步骤 4：实现生成与修复 Prompt**
 
 修复 Prompt 必须要求模型保留有效内容，只修复 JSON 解析、类型和缺失的必填字段。
 
-- [ ] **步骤 5：运行 Skill 测试**
+- [x] **步骤 5：运行 Skill 测试**
 
 运行：`python -m unittest tests.test_json_repair tests.test_screenplay_skill tests.test_screenplay_schema -v`
 
 预期：所有测试均通过。
 
-- [ ] **步骤 6：提交**
+- [x] **步骤 6：提交**
 
 ```powershell
 git add src/skills tests/test_json_repair.py tests/test_screenplay_skill.py
@@ -358,7 +358,7 @@ git commit -m "Add structured screenplay generation skill"
 - 新建： `src/evaluation/reviewer.py`
 - 测试： `tests/test_reviewer.py`
 
-- [ ] **步骤 1：编写失败的审查器测试**
+- [x] **步骤 1：编写失败的审查器测试**
 
 ```python
 class ReviewerTests(unittest.TestCase):
@@ -375,13 +375,13 @@ class ReviewerTests(unittest.TestCase):
         self.assertIs(best, new_screenplay)
 ```
 
-- [ ] **步骤 2：运行测试并确认 RED**
+- [x] **步骤 2：运行测试并确认 RED**
 
 运行：`python -m unittest tests.test_reviewer -v`
 
 预期：失败，因为 evaluation 模块尚不存在。
 
-- [ ] **步骤 3：实现 `ReviewReport`、通过判定与最佳版本选择**
+- [x] **步骤 3：实现 `ReviewReport`、通过判定与最佳版本选择**
 
 确保 `passed` 由代码计算：
 
@@ -389,17 +389,17 @@ class ReviewerTests(unittest.TestCase):
 passed = total_score >= pass_score and not deterministic_errors
 ```
 
-- [ ] **步骤 4：实现 LLM 审查器适配器**
+- [x] **步骤 4：实现 LLM 审查器适配器**
 
 `ScreenplayReviewer.review()` 必须合并确定性错误和解析后的 LLM 评分输出，并返回 `ReviewReport`。
 
-- [ ] **步骤 5：运行审查器测试**
+- [x] **步骤 5：运行审查器测试**
 
 运行：`python -m unittest tests.test_reviewer tests.test_screenplay_schema -v`
 
 预期：所有测试均通过。
 
-- [ ] **步骤 6：提交**
+- [x] **步骤 6：提交**
 
 ```powershell
 git add src/evaluation tests/test_reviewer.py
@@ -415,7 +415,7 @@ git commit -m "Add screenplay quality reviewer"
 - 新建： `src/tools/memory.py`
 - 测试： `tests/test_memory_repository.py`
 
-- [ ] **步骤 1：编写失败的 Memory 写入时机测试**
+- [x] **步骤 1：编写失败的 Memory 写入时机测试**
 
 ```python
 class MemoryRepositoryTests(unittest.TestCase):
@@ -433,23 +433,23 @@ class MemoryRepositoryTests(unittest.TestCase):
         self.assertEqual(repo.history("u1")[0].title, summary.title)
 ```
 
-- [ ] **步骤 2：运行测试并确认 RED**
+- [x] **步骤 2：运行测试并确认 RED**
 
 运行：`python -m unittest tests.test_memory_repository -v`
 
 预期：失败，因为 Memory 模块尚不存在。
 
-- [ ] **步骤 3：实现最小 SQLite 仓库**
+- [x] **步骤 3：实现最小 SQLite 仓库**
 
 使用标准库中的 `sqlite3`。为项目创建、显式偏好更新、成功导出摘要和历史记录读取提供明确方法。不得从模型输出推断用户偏好。
 
-- [ ] **步骤 4：运行 Memory 测试**
+- [x] **步骤 4：运行 Memory 测试**
 
 运行：`python -m unittest tests.test_memory_repository -v`
 
 预期：所有测试均通过。
 
-- [ ] **步骤 5：提交**
+- [x] **步骤 5：提交**
 
 ```powershell
 git add src/memory src/tools/memory.py tests/test_memory_repository.py
@@ -468,7 +468,7 @@ git commit -m "Add project and user memory repositories"
 - 新建： `rag_docs_short_drama/04_短剧质量审查标准.md`
 - 测试： `tests/test_export.py`
 
-- [ ] **步骤 1：编写失败的导出测试**
+- [x] **步骤 1：编写失败的导出测试**
 
 ```python
 class ExportTests(unittest.TestCase):
@@ -479,27 +479,27 @@ class ExportTests(unittest.TestCase):
         self.assertTrue(paths.retrieval_trace_json.exists())
 ```
 
-- [ ] **步骤 2：运行测试并确认 RED**
+- [x] **步骤 2：运行测试并确认 RED**
 
 运行：`python -m unittest tests.test_export -v`
 
 预期：失败，因为导出模块尚不存在。
 
-- [ ] **步骤 3：实现确定性的 JSON 与 Markdown 导出**
+- [x] **步骤 3：实现确定性的 JSON 与 Markdown 导出**
 
 将文件写入 `output/projects/<project_id>/` 并返回类型化路径。导出函数必须接收已选定的最佳版本，不得在内部选择版本。
 
-- [ ] **步骤 4：添加聚焦的 RAG 文档**
+- [x] **步骤 4：添加聚焦的 RAG 文档**
 
 每份 Markdown 文件必须使用清晰的 `#`、`##` 和 `###` 标题，使现有的层级感知分块器能够保留检索元数据。
 
-- [ ] **步骤 5：运行导出与 RAG 测试**
+- [x] **步骤 5：运行导出与 RAG 测试**
 
 运行：`python -m unittest tests.test_export tests.test_writing_knowledge_base tests.test_rag_baseline -v`
 
 预期：所有测试均通过。
 
-- [ ] **步骤 6：提交**
+- [x] **步骤 6：提交**
 
 ```powershell
 git add src/tools rag_docs_short_drama tests/test_export.py
@@ -515,7 +515,7 @@ git commit -m "Add screenplay exports and writing knowledge"
 - 新建： `src/agent/nodes.py`
 - 测试： `tests/test_graph_routing.py`
 
-- [ ] **步骤 1：编写失败的路由与节点测试**
+- [x] **步骤 1：编写失败的路由与节点测试**
 
 ```python
 class AgentRoutingTests(unittest.TestCase):
@@ -536,27 +536,27 @@ class AgentRoutingTests(unittest.TestCase):
         self.assertEqual({item.value for item in HumanReviewAction}, {"approve", "revise", "pause"})
 ```
 
-- [ ] **步骤 2：运行测试并确认 RED**
+- [x] **步骤 2：运行测试并确认 RED**
 
 运行：`python -m unittest tests.test_graph_routing -v`
 
 预期：失败，因为 Agent 模块尚不存在。
 
-- [ ] **步骤 3：实现状态契约与路由器**
+- [x] **步骤 3：实现状态契约与路由器**
 
 在 `AgentState` 中使用可序列化字典。实现 `HumanReviewAction`、`route_after_human_review()` 和 `route_after_review()`。
 
-- [ ] **步骤 4：实现依赖注入节点**
+- [x] **步骤 4：实现依赖注入节点**
 
 节点必须返回部分状态更新。`ScreenplaySkillNode` 捕获类型化 Skill 错误并累加 `json_repair_count`；`ReviewNode` 更新当前版本和最佳版本；`ReviseNode` 只递增 `content_revision_count`。
 
-- [ ] **步骤 5：运行路由与组件测试**
+- [x] **步骤 5：运行路由与组件测试**
 
 运行：`python -m unittest tests.test_graph_routing tests.test_screenplay_skill tests.test_reviewer -v`
 
 预期：所有测试均通过。
 
-- [ ] **步骤 6：提交**
+- [x] **步骤 6：提交**
 
 ```powershell
 git add src/agent tests/test_graph_routing.py
@@ -569,7 +569,7 @@ git commit -m "Add short drama agent nodes and routing"
 - 新建： `src/agent/graph.py`
 - 测试： `tests/test_graph_flow.py`
 
-- [ ] **步骤 1：编写失败的图流程测试**
+- [x] **步骤 1：编写失败的图流程测试**
 
 ```python
 class GraphFlowTests(unittest.TestCase):
@@ -596,23 +596,23 @@ class GraphFlowTests(unittest.TestCase):
         self.assertEqual(revised["user_feedback"], "加强结尾反转")
 ```
 
-- [ ] **步骤 2：运行测试并确认 RED**
+- [x] **步骤 2：运行测试并确认 RED**
 
 运行：`python -m unittest tests.test_graph_flow -v`
 
 预期：失败，因为图组装尚不存在。
 
-- [ ] **步骤 3：组装 LangGraph**
+- [x] **步骤 3：组装 LangGraph**
 
 添加符合已批准工作流的节点与条件边。使用 `interrupt()` 进行大纲审阅，并接受 `Command(resume={"action": action, "feedback": feedback})`。测试中先使用内存 checkpointer，同时暴露 SQLite checkpointer 构造方式供 CLI 使用。
 
-- [ ] **步骤 4：运行图测试**
+- [x] **步骤 4：运行图测试**
 
 运行：`python -m unittest tests.test_graph_flow tests.test_graph_routing -v`
 
 预期：所有测试均通过。
 
-- [ ] **步骤 5：提交**
+- [x] **步骤 5：提交**
 
 ```powershell
 git add src/agent/graph.py tests/test_graph_flow.py
@@ -627,7 +627,7 @@ git commit -m "Assemble interruptible short drama workflow"
 - 新建： `task2_main.py`
 - 测试： `tests/test_cli_flow.py`
 
-- [ ] **步骤 1：编写失败的 CLI 测试**
+- [x] **步骤 1：编写失败的 CLI 测试**
 
 ```python
 class CliFlowTests(unittest.TestCase):
@@ -644,17 +644,17 @@ class CliFlowTests(unittest.TestCase):
         self.assertIn("测试短剧", output)
 ```
 
-- [ ] **步骤 2：运行测试并确认 RED**
+- [x] **步骤 2：运行测试并确认 RED**
 
 运行：`python -m unittest tests.test_cli_flow -v`
 
 预期：失败，因为 CLI 模块尚不存在。
 
-- [ ] **步骤 3：实现 CLI 解析器与轻量入口**
+- [x] **步骤 3：实现 CLI 解析器与轻量入口**
 
 `task2_main.py` 只能调用 `src.app.cli.main()`。CLI 必须加载 `config/default.yaml`、实例化生产依赖，并支持 `create`、`resume` 和 `history`。
 
-- [ ] **步骤 4：运行 CLI 测试与帮助信息冒烟测试**
+- [x] **步骤 4：运行 CLI 测试与帮助信息冒烟测试**
 
 运行：`python -m unittest tests.test_cli_flow -v`
 
@@ -662,7 +662,7 @@ class CliFlowTests(unittest.TestCase):
 
 预期：测试通过，帮助信息列出全部三个命令。
 
-- [ ] **步骤 5：提交**
+- [x] **步骤 5：提交**
 
 ```powershell
 git add src/app task2_main.py tests/test_cli_flow.py
@@ -675,23 +675,23 @@ git commit -m "Add short drama agent CLI"
 - 新建： `README.md`
 - 修改：仅当实现过程中发现必须修正的契约时，修改 `docs/specs/2026-06-10-short-drama-agent-design.md`
 
-- [ ] **步骤 1：添加使用文档**
+- [x] **步骤 1：添加使用文档**
 
 记录安装方式、`.env` 配置、三个 CLI 命令、输出产物、RAG 使用方式、JSON Repair 与 Content Revision 的区别，以及离线测试命令。
 
-- [ ] **步骤 2：运行完整离线测试套件**
+- [x] **步骤 2：运行完整离线测试套件**
 
 运行：`python -m unittest discover -s tests -v`
 
 预期：所有测试均通过，且不发生网络调用。
 
-- [ ] **步骤 3：运行基础 RAG 回归测试**
+- [x] **步骤 3：运行基础 RAG 回归测试**
 
 运行：`python -m unittest tests/test_rag_baseline.py -v`
 
 预期：3 个测试通过。
 
-- [ ] **步骤 4：运行语法与 CLI 冒烟检查**
+- [x] **步骤 4：运行语法与 CLI 冒烟检查**
 
 运行：`python -m compileall src task2_main.py`
 
@@ -699,7 +699,7 @@ git commit -m "Add short drama agent CLI"
 
 预期：两个命令均以退出码 0 结束。
 
-- [ ] **步骤 5：检查仓库状态**
+- [x] **步骤 5：检查仓库状态**
 
 运行：`git status --short`
 
@@ -707,14 +707,14 @@ git commit -m "Add short drama agent CLI"
 
 预期：仅剩预期的文档变更，且没有空白字符错误。
 
-- [ ] **步骤 6：提交最终文档**
+- [x] **步骤 6：提交最终文档**
 
 ```powershell
 git add README.md docs
 git commit -m "Document short drama agent workflow"
 ```
 
-- [ ] **步骤 7：推送已验证的实现**
+- [x] **步骤 7：推送已验证的实现**
 
 运行：`git push origin main`
 

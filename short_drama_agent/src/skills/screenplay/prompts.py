@@ -1,6 +1,11 @@
 import json
 from typing import Any
 
+from .schemas import Screenplay
+
+
+SCREENPLAY_SCHEMA_JSON = json.dumps(Screenplay.model_json_schema(), ensure_ascii=False)
+
 
 def build_generation_messages(
     story_plan: dict[str, Any],
@@ -22,7 +27,10 @@ def build_generation_messages(
     return [
         {
             "role": "system",
-            "content": "你是短剧编剧。仅输出符合 Screenplay Schema 的 JSON 对象。",
+            "content": (
+                "你是短剧编剧。仅输出符合以下 Screenplay JSON Schema 的对象，"
+                f"不要添加外层包装：{SCREENPLAY_SCHEMA_JSON}"
+            ),
         },
         {
             "role": "user",
@@ -37,7 +45,8 @@ def build_repair_messages(raw_response: str, validation_error: str) -> list[dict
             "role": "system",
             "content": (
                 "保留所有有效剧情内容，只修复 JSON 解析、字段类型和缺失的必填字段。"
-                "不要进行内容改写或质量优化，仅输出修复后的 JSON。"
+                "不要进行内容改写或质量优化，仅输出修复后的 JSON，且不要添加外层包装。"
+                f"目标 Screenplay JSON Schema：{SCREENPLAY_SCHEMA_JSON}"
             ),
         },
         {

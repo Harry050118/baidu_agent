@@ -88,6 +88,14 @@ class ProjectMemoryRepository:
             ).fetchone()
         return self._record_from_row(row) if row else None
 
+    def get_project_by_thread(self, thread_id: str) -> ProjectRecord | None:
+        with self._connection() as connection:
+            row = connection.execute(
+                "SELECT * FROM projects WHERE thread_id = ?",
+                (thread_id,),
+            ).fetchone()
+        return self._record_from_row(row) if row else None
+
     def record_export(self, summary: ProjectSummary) -> None:
         with self._connection() as connection:
             cursor = connection.execute(

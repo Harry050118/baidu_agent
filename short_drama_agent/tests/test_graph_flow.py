@@ -56,6 +56,34 @@ class Reviewer:
         return build_review_report(score_payload(9.0), [], pass_score=8.0)
 
 
+class SequenceReviewer:
+    def __init__(self):
+        self.calls = 0
+
+    def review(self, *args):
+        self.calls += 1
+        score = 7.0 if self.calls == 1 else 9.0
+        return build_review_report(score_payload(score), [], pass_score=8.0)
+
+
+class RecordingRetriever:
+    def __init__(self):
+        self.purposes = []
+
+    def __call__(self, query, purpose):
+        self.purposes.append(purpose)
+        return [{"chunk_id": purpose}]
+
+
+class RecordingExporter:
+    def __init__(self):
+        self.state = None
+
+    def __call__(self, state):
+        self.state = state
+        return exporter(state)
+
+
 def story_planner(state):
     return {
         "story_plan": {
@@ -75,6 +103,7 @@ def exporter(state):
 
 def dependencies():
     return GraphDependencies(
+        retriever=lambda query, purpose: [{"chunk_id": purpose}],
         story_planner=story_planner,
         screenplay_skill=Skill(),
         reviewer=Reviewer(),
@@ -117,9 +146,27 @@ class GraphFlowTests(unittest.TestCase):
         self.assertEqual(revised["story_plan"]["feedback"], "加强结尾反转")
         self.assertTrue(revised["__interrupt__"])
 
+    def test_revise_updates_checkpoint_with_explicit_user_preferences(self):
+        graph = build_test_graph(dependencies(), checkpointer=MemorySaver())
+        graph.invoke(initial_state(), config=thread_config("t-preferences"))
+
+        revised = graph.invoke(
+            Command(
+                resume={
+                    "action": "revise",
+                    "feedback": "加强结尾反转",
+                    "user_preferences": {"preferred_tones": ["紧张"]},
+                }
+            ),
+            thread_config("t-preferences"),
+        )
+
+        self.assertEqual(revised["user_preferences"]["preferred_tones"], ["紧张"])
+
     def test_generation_failure_stops_before_review_and_preserves_error(self):
         deps = dependencies()
         deps = GraphDependencies(
+            retriever=deps.retriever,
             story_planner=deps.story_planner,
             screenplay_skill=FailingSkill(),
             reviewer=deps.reviewer,
@@ -134,6 +181,122 @@ class GraphFlowTests(unittest.TestCase):
 
         self.assertEqual(failed["errors"][0]["error_type"], "JsonRepairExhaustedError")
         self.assertIsNone(failed.get("review_report"))
+
+    def test_graph_runs_three_retrieval_stages_and_exports_trace(self):
+        retriever = RecordingRetriever()
+        recording_exporter = RecordingExporter()
+        deps = dependencies()
+        deps = GraphDependencies(
+            retriever=retriever,
+            story_planner=deps.story_planner,
+            screenplay_skill=deps.screenplay_skill,
+            reviewer=deps.reviewer,
+            exporter=recording_exporter,
+        )
+        graph = build_test_graph(deps, checkpointer=MemorySaver())
+
+        graph.invoke(initial_state(), config=thread_config("t5"))
+        graph.invoke(Command(resume={"action": "approve"}), thread_config("t5"))
+
+        self.assertEqual(retriever.purposes, ["planning", "writing", "review"])
+        self.assertEqual(recording_exporter.state["planning_guidelines"][0]["chunk_id"], "planning")
+        self.assertEqual(recording_exporter.state["writing_guidelines"][0]["chunk_id"], "writing")
+        self.assertEqual(recording_exporter.state["review_guidelines"][0]["chunk_id"], "review")
+
+    def test_content_revision_repeats_writing_and_review_retrieval(self):
+        retriever = RecordingRetriever()
+        deps = dependencies()
+        deps = GraphDependencies(
+            retriever=retriever,
+            story_planner=deps.story_planner,
+            screenplay_skill=deps.screenplay_skill,
+            reviewer=SequenceReviewer(),
+            exporter=deps.exporter,
+        )
+        graph = build_test_graph(deps, checkpointer=MemorySaver())
+
+        graph.invoke(initial_state(), config=thread_config("t6"))
+        graph.invoke(Command(resume={"action": "approve"}), thread_config("t6"))
+
+        self.assertEqual(
+            retriever.purposes,
+            ["planning", "writing", "review", "writing", "review"],
+        )
+
+    def test_story_planning_failure_is_recorded_and_stops(self):
+        deps = dependencies()
+
+        def failing_planner(state):
+            raise RuntimeError("planner offline")
+
+        graph = build_test_graph(
+            GraphDependencies(
+                retriever=deps.retriever,
+                story_planner=failing_planner,
+                screenplay_skill=deps.screenplay_skill,
+                reviewer=deps.reviewer,
+                exporter=deps.exporter,
+            ),
+            checkpointer=MemorySaver(),
+        )
+
+        state = initial_state()
+        state["story_plan"] = {"genre": "旧大纲"}
+        failed = graph.invoke(state, config=thread_config("t7"))
+
+        self.assertEqual(failed["errors"][0]["node"], "story_planning")
+        self.assertFalse(failed["errors"][0]["recoverable"])
+        self.assertNotIn("__interrupt__", failed)
+
+    def test_review_failure_is_recorded_and_stops_before_export(self):
+        deps = dependencies()
+        recording_exporter = RecordingExporter()
+
+        class FailingReviewer:
+            def review(self, *args):
+                raise RuntimeError("review offline")
+
+        graph = build_test_graph(
+            GraphDependencies(
+                retriever=deps.retriever,
+                story_planner=deps.story_planner,
+                screenplay_skill=deps.screenplay_skill,
+                reviewer=FailingReviewer(),
+                exporter=recording_exporter,
+            ),
+            checkpointer=MemorySaver(),
+        )
+
+        state = initial_state()
+        state["review_report"] = {"passed": True}
+        graph.invoke(state, config=thread_config("t8"))
+        failed = graph.invoke(Command(resume={"action": "approve"}), thread_config("t8"))
+
+        self.assertEqual(failed["errors"][0]["node"], "review")
+        self.assertIsNone(recording_exporter.state)
+
+    def test_export_failure_is_recorded(self):
+        deps = dependencies()
+
+        def failing_exporter(state):
+            raise OSError("disk full")
+
+        graph = build_test_graph(
+            GraphDependencies(
+                retriever=deps.retriever,
+                story_planner=deps.story_planner,
+                screenplay_skill=deps.screenplay_skill,
+                reviewer=deps.reviewer,
+                exporter=failing_exporter,
+            ),
+            checkpointer=MemorySaver(),
+        )
+
+        graph.invoke(initial_state(), config=thread_config("t9"))
+        failed = graph.invoke(Command(resume={"action": "approve"}), thread_config("t9"))
+
+        self.assertEqual(failed["errors"][0]["node"], "export")
+        self.assertFalse(failed["errors"][0]["recoverable"])
 
 
 if __name__ == "__main__":

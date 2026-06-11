@@ -8,7 +8,7 @@ CONFIG = {
     "llm": {
         "api_key": os.getenv("DEEPSEEK_API_KEY"),
         "base_url": "https://api.deepseek.com",
-        "model": "deepseek-v4-pro",
+        "model": "deepseek-chat",
     },
 
     # Embedding配置

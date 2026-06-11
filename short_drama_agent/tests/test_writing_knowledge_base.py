@@ -69,6 +69,20 @@ class WritingKnowledgeBaseTests(unittest.TestCase):
         self.assertIn("场景节奏", build_writing_query(story_plan))
         self.assertIn("评价标准", build_review_query(screenplay))
 
+    def test_writing_query_supports_real_story_plan_without_top_level_genre(self):
+        story_plan = {
+            "title": "消失的课表",
+            "conflict": {
+                "type": "校园悬疑",
+                "description": "学生调查异常课程表。",
+            },
+        }
+
+        query = build_writing_query(story_plan)
+
+        self.assertIn("校园悬疑", query)
+        self.assertIn("场景节奏", query)
+
 
 if __name__ == "__main__":
     unittest.main()

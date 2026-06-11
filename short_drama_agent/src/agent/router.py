@@ -18,8 +18,14 @@ def route_after_human_review(state: AgentState) -> str:
     }[action]
 
 
+def route_after_story_planning(state: AgentState) -> str:
+    return "human_review" if state.get("story_plan") else "stop"
+
+
 def route_after_review(state: AgentState) -> str:
     report = state.get("review_report") or {}
+    if not report:
+        return "stop"
     if report.get("passed"):
         return "export"
     max_revisions = state.get("constraints", {}).get("max_content_revisions", 2)

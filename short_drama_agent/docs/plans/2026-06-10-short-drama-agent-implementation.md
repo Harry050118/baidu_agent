@@ -1,6 +1,6 @@
 # Short Drama Agent Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Build a CLI short-drama Agent that extends its own independent RAG baseline, pauses for outline review, generates validated structured screenplays, reviews and revises content, persists memory, and exports the best result.
 
@@ -69,7 +69,7 @@
 - Modify: `requirements.txt`
 - Test: `tests/test_config_and_llm.py`
 
-- [ ] **Step 1: Write the failing configuration and LLM contract tests**
+- [x] **Step 1: Write the failing configuration and LLM contract tests**
 
 ```python
 import unittest
@@ -95,13 +95,13 @@ class ConfigAndLLMTests(unittest.TestCase):
         self.assertEqual(llm.generate([{"role": "user", "content": "hello"}]), "hello")
 ```
 
-- [ ] **Step 2: Run the test and verify RED**
+- [x] **Step 2: Run the test and verify RED**
 
 Run: `python -m unittest tests.test_config_and_llm -v`
 
 Expected: FAIL because `src.config` and `src.llm.base` do not exist.
 
-- [ ] **Step 3: Add dependencies and minimal configuration files**
+- [x] **Step 3: Add dependencies and minimal configuration files**
 
 Add to `requirements.txt`:
 
@@ -116,7 +116,7 @@ Create `.env.example` with `DEEPSEEK_API_KEY=`.
 
 Create `config/default.yaml` with defaults from the approved design, including RAG, generation, review, and SQLite paths.
 
-- [ ] **Step 4: Implement minimal config loader and LLM protocol**
+- [x] **Step 4: Implement minimal config loader and LLM protocol**
 
 ```python
 class LLM(Protocol):
@@ -131,13 +131,13 @@ class LLM(Protocol):
 
 `DeepSeekLLM` must adapt this method to the existing `LLMClient.chat()` method.
 
-- [ ] **Step 5: Run tests and task-local RAG regression suite**
+- [x] **Step 5: Run tests and task-local RAG regression suite**
 
 Run: `python -m unittest tests.test_config_and_llm tests.test_rag_baseline -v`
 
 Expected: all tests PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```powershell
 git add .env.example config/default.yaml requirements.txt src/config.py src/llm tests/test_config_and_llm.py
@@ -154,7 +154,7 @@ git commit -m "Add agent configuration and LLM contract"
 - Test: `tests/test_existing_rag_compatibility.py`
 - Test: `tests/test_writing_knowledge_base.py`
 
-- [ ] **Step 1: Write failing adapter tests**
+- [x] **Step 1: Write failing adapter tests**
 
 ```python
 class WritingKnowledgeBaseTests(unittest.TestCase):
@@ -174,13 +174,13 @@ class WritingKnowledgeBaseTests(unittest.TestCase):
             kb.search("q", "review", candidate_k=2, top_k=3)
 ```
 
-- [ ] **Step 2: Run tests and verify RED**
+- [x] **Step 2: Run tests and verify RED**
 
 Run: `python -m unittest tests.test_writing_knowledge_base -v`
 
 Expected: FAIL because adapter modules do not exist.
 
-- [ ] **Step 3: Implement `RetrievedGuideline` and adapter**
+- [x] **Step 3: Implement `RetrievedGuideline` and adapter**
 
 Use SHA-256 over normalized `source`, optional title hierarchy, and chunk text. `WritingKnowledgeBase` must generate the ID when the task-local RAG result has none and call:
 
@@ -188,7 +188,7 @@ Use SHA-256 over normalized `source`, optional title hierarchy, and chunk text. 
 self.retriever.query(query, candidate_k=candidate_k, top_k=top_k)
 ```
 
-- [ ] **Step 4: Add query builders**
+- [x] **Step 4: Add query builders**
 
 Create deterministic functions:
 
@@ -205,13 +205,13 @@ def build_review_query(screenplay: dict) -> str:
     return f"{screenplay['genre']}短剧的结构、节奏、人物一致性与可拍性评价标准"
 ```
 
-- [ ] **Step 5: Run adapter and task-local RAG tests**
+- [x] **Step 5: Run adapter and task-local RAG tests**
 
 Run: `python -m unittest tests.test_writing_knowledge_base tests.test_existing_rag_compatibility tests.test_rag_baseline -v`
 
 Expected: all tests PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```powershell
 git add src/rag tests/test_existing_rag_compatibility.py tests/test_writing_knowledge_base.py
@@ -226,7 +226,7 @@ git commit -m "Add short drama writing knowledge adapter"
 - Create: `src/skills/screenplay/schemas.py`
 - Test: `tests/test_screenplay_schema.py`
 
-- [ ] **Step 1: Write failing schema tests**
+- [x] **Step 1: Write failing schema tests**
 
 ```python
 class ScreenplaySchemaTests(unittest.TestCase):
@@ -246,13 +246,13 @@ class ScreenplaySchemaTests(unittest.TestCase):
         self.assertTrue(any("角色" in error for error in errors))
 ```
 
-- [ ] **Step 2: Run test and verify RED**
+- [x] **Step 2: Run test and verify RED**
 
 Run: `python -m unittest tests.test_screenplay_schema -v`
 
 Expected: FAIL because screenplay schemas do not exist.
 
-- [ ] **Step 3: Implement Pydantic schemas and validation**
+- [x] **Step 3: Implement Pydantic schemas and validation**
 
 Implement `Character`, `Dialogue`, `Scene`, `Screenplay`, `GenerationConstraints`, and:
 
@@ -270,13 +270,13 @@ def validate_screenplay(
 
 Validate duration, scene count, speaker references, continuous unique IDs, hook presence, and reversal.
 
-- [ ] **Step 4: Run schema tests**
+- [x] **Step 4: Run schema tests**
 
 Run: `python -m unittest tests.test_screenplay_schema -v`
 
 Expected: all tests PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add src/skills tests/test_screenplay_schema.py
@@ -292,7 +292,7 @@ git commit -m "Add structured screenplay schemas"
 - Test: `tests/test_json_repair.py`
 - Test: `tests/test_screenplay_skill.py`
 
-- [ ] **Step 1: Write failing JSON repair tests**
+- [x] **Step 1: Write failing JSON repair tests**
 
 ```python
 class JsonRepairTests(unittest.TestCase):
@@ -307,13 +307,13 @@ class JsonRepairTests(unittest.TestCase):
             ScreenplaySkill(llm, max_json_repair_attempts=2).generate(**inputs())
 ```
 
-- [ ] **Step 2: Run tests and verify RED**
+- [x] **Step 2: Run tests and verify RED**
 
 Run: `python -m unittest tests.test_json_repair tests.test_screenplay_skill -v`
 
 Expected: FAIL because Skill modules do not exist.
 
-- [ ] **Step 3: Implement typed errors and minimal JSON extraction**
+- [x] **Step 3: Implement typed errors and minimal JSON extraction**
 
 Implement:
 
@@ -332,17 +332,17 @@ class ScreenplaySkillResult(BaseModel):
 
 The Skill returns only success results. Exhausted repair attempts must raise `JsonRepairExhaustedError`.
 
-- [ ] **Step 4: Implement generation and repair prompts**
+- [x] **Step 4: Implement generation and repair prompts**
 
 The repair prompt must instruct the model to preserve valid content and only fix JSON parsing, types, and missing required fields.
 
-- [ ] **Step 5: Run Skill tests**
+- [x] **Step 5: Run Skill tests**
 
 Run: `python -m unittest tests.test_json_repair tests.test_screenplay_skill tests.test_screenplay_schema -v`
 
 Expected: all tests PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```powershell
 git add src/skills tests/test_json_repair.py tests/test_screenplay_skill.py
@@ -358,7 +358,7 @@ git commit -m "Add structured screenplay generation skill"
 - Create: `src/evaluation/reviewer.py`
 - Test: `tests/test_reviewer.py`
 
-- [ ] **Step 1: Write failing reviewer tests**
+- [x] **Step 1: Write failing reviewer tests**
 
 ```python
 class ReviewerTests(unittest.TestCase):
@@ -375,13 +375,13 @@ class ReviewerTests(unittest.TestCase):
         self.assertIs(best, new_screenplay)
 ```
 
-- [ ] **Step 2: Run tests and verify RED**
+- [x] **Step 2: Run tests and verify RED**
 
 Run: `python -m unittest tests.test_reviewer -v`
 
 Expected: FAIL because evaluation modules do not exist.
 
-- [ ] **Step 3: Implement `ReviewReport`, pass calculation, and best selection**
+- [x] **Step 3: Implement `ReviewReport`, pass calculation, and best selection**
 
 Ensure `passed` is computed by code:
 
@@ -389,17 +389,17 @@ Ensure `passed` is computed by code:
 passed = total_score >= pass_score and not deterministic_errors
 ```
 
-- [ ] **Step 4: Implement LLM reviewer adapter**
+- [x] **Step 4: Implement LLM reviewer adapter**
 
 `ScreenplayReviewer.review()` must combine deterministic errors with parsed LLM score output and return `ReviewReport`.
 
-- [ ] **Step 5: Run reviewer tests**
+- [x] **Step 5: Run reviewer tests**
 
 Run: `python -m unittest tests.test_reviewer tests.test_screenplay_schema -v`
 
 Expected: all tests PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```powershell
 git add src/evaluation tests/test_reviewer.py
@@ -415,7 +415,7 @@ git commit -m "Add screenplay quality reviewer"
 - Create: `src/tools/memory.py`
 - Test: `tests/test_memory_repository.py`
 
-- [ ] **Step 1: Write failing memory timing tests**
+- [x] **Step 1: Write failing memory timing tests**
 
 ```python
 class MemoryRepositoryTests(unittest.TestCase):
@@ -433,23 +433,23 @@ class MemoryRepositoryTests(unittest.TestCase):
         self.assertEqual(repo.history("u1")[0].title, summary.title)
 ```
 
-- [ ] **Step 2: Run tests and verify RED**
+- [x] **Step 2: Run tests and verify RED**
 
 Run: `python -m unittest tests.test_memory_repository -v`
 
 Expected: FAIL because memory modules do not exist.
 
-- [ ] **Step 3: Implement minimal SQLite repositories**
+- [x] **Step 3: Implement minimal SQLite repositories**
 
 Use `sqlite3` from the standard library. Provide explicit methods for project creation, explicit preference updates, successful-export summaries, and history reads. Do not infer preferences from model output.
 
-- [ ] **Step 4: Run memory tests**
+- [x] **Step 4: Run memory tests**
 
 Run: `python -m unittest tests.test_memory_repository -v`
 
 Expected: all tests PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add src/memory src/tools/memory.py tests/test_memory_repository.py
@@ -468,7 +468,7 @@ git commit -m "Add project and user memory repositories"
 - Create: `rag_docs_short_drama/04_短剧质量审查标准.md`
 - Test: `tests/test_export.py`
 
-- [ ] **Step 1: Write failing export test**
+- [x] **Step 1: Write failing export test**
 
 ```python
 class ExportTests(unittest.TestCase):
@@ -479,27 +479,27 @@ class ExportTests(unittest.TestCase):
         self.assertTrue(paths.retrieval_trace_json.exists())
 ```
 
-- [ ] **Step 2: Run test and verify RED**
+- [x] **Step 2: Run test and verify RED**
 
 Run: `python -m unittest tests.test_export -v`
 
 Expected: FAIL because export module does not exist.
 
-- [ ] **Step 3: Implement deterministic JSON and Markdown export**
+- [x] **Step 3: Implement deterministic JSON and Markdown export**
 
 Write files under `output/projects/<project_id>/` and return typed paths. Export must receive the selected best version, not select it internally.
 
-- [ ] **Step 4: Add focused RAG documents**
+- [x] **Step 4: Add focused RAG documents**
 
 Each Markdown file must use clear `#`, `##`, and `###` headings so the existing hierarchy-aware chunker preserves retrieval metadata.
 
-- [ ] **Step 5: Run export and RAG tests**
+- [x] **Step 5: Run export and RAG tests**
 
 Run: `python -m unittest tests.test_export tests.test_writing_knowledge_base tests.test_rag_baseline -v`
 
 Expected: all tests PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```powershell
 git add src/tools rag_docs_short_drama tests/test_export.py
@@ -515,7 +515,7 @@ git commit -m "Add screenplay exports and writing knowledge"
 - Create: `src/agent/nodes.py`
 - Test: `tests/test_graph_routing.py`
 
-- [ ] **Step 1: Write failing routing and node tests**
+- [x] **Step 1: Write failing routing and node tests**
 
 ```python
 class AgentRoutingTests(unittest.TestCase):
@@ -536,27 +536,27 @@ class AgentRoutingTests(unittest.TestCase):
         self.assertEqual({item.value for item in HumanReviewAction}, {"approve", "revise", "pause"})
 ```
 
-- [ ] **Step 2: Run tests and verify RED**
+- [x] **Step 2: Run tests and verify RED**
 
 Run: `python -m unittest tests.test_graph_routing -v`
 
 Expected: FAIL because Agent modules do not exist.
 
-- [ ] **Step 3: Implement state contracts and routers**
+- [x] **Step 3: Implement state contracts and routers**
 
 Use serializable dictionaries in `AgentState`. Implement `HumanReviewAction`, `route_after_human_review()`, and `route_after_review()`.
 
-- [ ] **Step 4: Implement dependency-injected nodes**
+- [x] **Step 4: Implement dependency-injected nodes**
 
 Nodes must return partial state updates. `ScreenplaySkillNode` catches typed Skill errors and accumulates `json_repair_count`; `ReviewNode` updates current and best versions; `ReviseNode` increments only `content_revision_count`.
 
-- [ ] **Step 5: Run routing and component tests**
+- [x] **Step 5: Run routing and component tests**
 
 Run: `python -m unittest tests.test_graph_routing tests.test_screenplay_skill tests.test_reviewer -v`
 
 Expected: all tests PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```powershell
 git add src/agent tests/test_graph_routing.py
@@ -569,7 +569,7 @@ git commit -m "Add short drama agent nodes and routing"
 - Create: `src/agent/graph.py`
 - Test: `tests/test_graph_flow.py`
 
-- [ ] **Step 1: Write failing graph-flow tests**
+- [x] **Step 1: Write failing graph-flow tests**
 
 ```python
 class GraphFlowTests(unittest.TestCase):
@@ -596,23 +596,23 @@ class GraphFlowTests(unittest.TestCase):
         self.assertEqual(revised["user_feedback"], "加强结尾反转")
 ```
 
-- [ ] **Step 2: Run tests and verify RED**
+- [x] **Step 2: Run tests and verify RED**
 
 Run: `python -m unittest tests.test_graph_flow -v`
 
 Expected: FAIL because graph assembly does not exist.
 
-- [ ] **Step 3: Assemble LangGraph**
+- [x] **Step 3: Assemble LangGraph**
 
 Add nodes and conditional edges matching the approved workflow. Use `interrupt()` for outline review and accept `Command(resume={"action": action, "feedback": feedback})`. Start with an in-memory checkpointer in tests and expose SQLite checkpointer construction for CLI use.
 
-- [ ] **Step 4: Run graph tests**
+- [x] **Step 4: Run graph tests**
 
 Run: `python -m unittest tests.test_graph_flow tests.test_graph_routing -v`
 
 Expected: all tests PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add src/agent/graph.py tests/test_graph_flow.py
@@ -627,7 +627,7 @@ git commit -m "Assemble interruptible short drama workflow"
 - Create: `task2_main.py`
 - Test: `tests/test_cli_flow.py`
 
-- [ ] **Step 1: Write failing CLI tests**
+- [x] **Step 1: Write failing CLI tests**
 
 ```python
 class CliFlowTests(unittest.TestCase):
@@ -644,17 +644,17 @@ class CliFlowTests(unittest.TestCase):
         self.assertIn("测试短剧", output)
 ```
 
-- [ ] **Step 2: Run tests and verify RED**
+- [x] **Step 2: Run tests and verify RED**
 
 Run: `python -m unittest tests.test_cli_flow -v`
 
 Expected: FAIL because CLI modules do not exist.
 
-- [ ] **Step 3: Implement CLI parser and thin entry point**
+- [x] **Step 3: Implement CLI parser and thin entry point**
 
 `task2_main.py` must only call `src.app.cli.main()`. CLI must load `config/default.yaml`, instantiate production dependencies, and support `create`, `resume`, and `history`.
 
-- [ ] **Step 4: Run CLI tests and help smoke test**
+- [x] **Step 4: Run CLI tests and help smoke test**
 
 Run: `python -m unittest tests.test_cli_flow -v`
 
@@ -662,7 +662,7 @@ Run: `python task2_main.py --help`
 
 Expected: tests PASS and help lists all three commands.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add src/app task2_main.py tests/test_cli_flow.py
@@ -675,23 +675,23 @@ git commit -m "Add short drama agent CLI"
 - Create: `README.md`
 - Modify: `docs/superpowers/specs/2026-06-10-short-drama-agent-design.md` only if implementation discovered a necessary contract correction
 
-- [ ] **Step 1: Add usage documentation**
+- [x] **Step 1: Add usage documentation**
 
 Document setup, `.env` configuration, the three CLI commands, output artifacts, RAG reuse, JSON Repair versus Content Revision, and offline test commands.
 
-- [ ] **Step 2: Run complete offline test suite**
+- [x] **Step 2: Run complete offline test suite**
 
 Run: `python -m unittest discover -s tests -v`
 
 Expected: all tests PASS with no network calls.
 
-- [ ] **Step 3: Run existing task-one regression tests**
+- [x] **Step 3: Run existing task-one regression tests**
 
 Run: `python -m unittest tests/test_rag_baseline.py -v`
 
 Expected: 3 tests PASS.
 
-- [ ] **Step 4: Run syntax and CLI smoke checks**
+- [x] **Step 4: Run syntax and CLI smoke checks**
 
 Run: `python -m compileall src task2_main.py`
 
@@ -699,7 +699,7 @@ Run: `python task2_main.py --help`
 
 Expected: both commands exit 0.
 
-- [ ] **Step 5: Inspect repository state**
+- [x] **Step 5: Inspect repository state**
 
 Run: `git status --short`
 
@@ -707,14 +707,14 @@ Run: `git diff --check`
 
 Expected: only intended documentation changes remain and no whitespace errors.
 
-- [ ] **Step 6: Commit final documentation**
+- [x] **Step 6: Commit final documentation**
 
 ```powershell
 git add README.md docs
 git commit -m "Document short drama agent workflow"
 ```
 
-- [ ] **Step 7: Push verified implementation**
+- [x] **Step 7: Push verified implementation**
 
 Run: `git push origin main`
 

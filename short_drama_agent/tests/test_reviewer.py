@@ -1,7 +1,12 @@
 import json
 import unittest
 
-from src.evaluation.reviewer import ScreenplayReviewer, build_review_report, choose_best
+from src.evaluation.reviewer import (
+    ScreenplayReviewer,
+    build_review_report,
+    choose_best,
+    normalize_score_payload,
+)
 from src.skills.screenplay.schemas import GenerationConstraints, Screenplay
 from tests.screenplay_fixtures import SequenceLLM, valid_screenplay_dict
 
@@ -30,6 +35,46 @@ def screenplay(title):
 
 
 class ReviewerTests(unittest.TestCase):
+    def test_normalizes_real_reviewer_shorthand_and_five_point_scale(self):
+        payload = {
+            "structure": 4,
+            "character_consistency": 4,
+            "conflict": 5,
+            "dialogue": 4,
+            "pacing": 4,
+            "shootability": 5,
+            "rag_adherence": 5,
+            "schema_validity": 5,
+        }
+
+        normalized = normalize_score_payload(payload)
+
+        self.assertEqual(normalized["structure_score"], 8.0)
+        self.assertEqual(normalized["conflict_score"], 10.0)
+        self.assertEqual(normalized["total_score"], 9.0)
+        self.assertEqual(normalized["issues"], [])
+
+    def test_normalizes_string_revision_instructions_to_list(self):
+        normalized = normalize_score_payload(
+            {
+                **score_payload(8.0),
+                "revision_instructions": "优化对白并补充人物动机。",
+            }
+        )
+
+        self.assertEqual(
+            normalized["revision_instructions"],
+            ["优化对白并补充人物动机。"],
+        )
+
+    def test_normalizes_summed_total_score_to_dimension_average(self):
+        payload = score_payload(8.0)
+        payload["total_score"] = 64.0
+
+        normalized = normalize_score_payload(payload)
+
+        self.assertEqual(normalized["total_score"], 8.0)
+
     def test_passed_requires_score_and_no_deterministic_errors(self):
         report = build_review_report(score_payload(9.0), ["scene ids invalid"], pass_score=8.0)
         self.assertFalse(report.passed)

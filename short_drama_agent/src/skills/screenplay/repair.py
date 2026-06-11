@@ -24,6 +24,8 @@ def extract_json_text(response: str) -> str:
 def parse_screenplay(response: str) -> Screenplay:
     try:
         payload: Any = json.loads(extract_json_text(response))
+        if isinstance(payload, dict) and isinstance(payload.get("screenplay"), dict):
+            payload = payload["screenplay"]
         return Screenplay.model_validate(payload)
     except (json.JSONDecodeError, ValidationError, TypeError) as exc:
         raise ScreenplayGenerationError(str(exc)) from exc
