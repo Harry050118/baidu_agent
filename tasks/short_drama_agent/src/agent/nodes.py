@@ -32,7 +32,7 @@ def screenplay_node(state: AgentState, *, skill: Any) -> dict[str, Any]:
                 "recoverable": True,
             }
         )
-        return {"errors": errors}
+        return {"screenplay": None, "errors": errors}
 
 
 def review_node(state: AgentState, *, reviewer: Any) -> dict[str, Any]:
